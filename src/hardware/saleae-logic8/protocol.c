@@ -598,6 +598,11 @@ SR_PRIV int saleae_logic8_init(const struct sr_dev_inst *sdi)
 	if (ret != SR_OK)
 		return ret;
 
+	ret = read_temperature(sdi, &temperature);
+	if (ret != SR_OK)
+		return ret;
+	sr_dbg("temperature = %d", temperature);
+
 	/* Check if we need to upload the bitstream. */
 	ret = read_reg(sdi, 0x7f, &reg_val);
 	if (ret != SR_OK)
@@ -697,11 +702,6 @@ SR_PRIV int saleae_logic8_init(const struct sr_dev_inst *sdi)
 		if (ret != SR_OK)
 			return ret;
 	}
-
-	ret = read_temperature(sdi, &temperature);
-	if (ret != SR_OK)
-		return ret;
-	sr_dbg("temperature = %d", temperature);
 
 	/* Setting the LED doesn't work yet. */
 	/* set_led(sdi, 0x00, 0x00, 0xff); */
