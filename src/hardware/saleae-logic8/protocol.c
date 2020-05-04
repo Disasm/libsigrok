@@ -106,7 +106,11 @@ static int transact(const struct sr_dev_inst *sdi,
 		return SR_ERR_ARG;
 
 	req_enc = g_malloc(req_len);
-	encrypt(sdi, req, req_enc, req_len);
+	if ((req[0] & 0x08) != 0) {
+		memcpy(req_enc, req, req_len);
+	} else {
+		encrypt(sdi, req, req_enc, req_len);
+	}
 
 	ret = libusb_bulk_transfer(usb->devhdl, 1, req_enc, req_len, &xfer, 1000);
 	if (ret != 0) {
@@ -459,7 +463,7 @@ static int upload_bitstream_part(const struct sr_dev_inst *sdi,
 	if (len < 1 || len > 1020 || !data)
 		return SR_ERR_ARG;
 
-	req[0] = 0x00;
+	req[0] = 0x08;
 	req[1] = COMMAND_SEND_BITSTREAM;
 	req[2] = len;
 	req[3] = len >> 8;
