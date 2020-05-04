@@ -71,11 +71,8 @@ static void encrypt(const struct sr_dev_inst *sdi, const uint8_t *in, uint8_t *o
 	for (i = 0; i < len; i++) {
 		value = in[i];
 		mask = lfsr >> (i % 4 * 8);
-		if (i == 0)
-			value = (value & 0x28) | ((value ^ mask) & ~0x28);
-		else
-			value = value ^ mask;
-		out[i] = value;
+		if (i == 0) mask = lfsr & 0xd7;
+		out[i] = value ^ mask;
 	}
 	iterate_lfsr(sdi);
 }
