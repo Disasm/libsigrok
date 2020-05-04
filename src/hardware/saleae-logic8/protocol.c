@@ -625,10 +625,10 @@ SR_PRIV int saleae_logic8_init(const struct sr_dev_inst *sdi)
 		return ret;
 
 	sr_dbg("init ADC");
-	ret = write_adc(sdi, 0x11, 0x0444);
+	ret = write_adc(sdi, 0x11, 0x0555);
 	if (ret != SR_OK)
 		return ret;
-	ret = write_adc(sdi, 0x12, 0x0777);
+	ret = write_adc(sdi, 0x12, 0x0666);
 	if (ret != SR_OK)
 		return ret;
 	ret = write_adc(sdi, 0x25, 0x0000);
@@ -649,18 +649,10 @@ SR_PRIV int saleae_logic8_init(const struct sr_dev_inst *sdi)
 	ret = write_adc(sdi, 0x50, 0x0000);
 	if (ret != SR_OK)
 		return ret;
-	ret = write_adc(sdi, 0x55, 0x0020);
+	ret = write_adc(sdi, 0x55, 0x00e0);
 	if (ret != SR_OK)
 		return ret;
-	ret = write_adc(sdi, 0x56, 0x0000);
-	if (ret != SR_OK)
-		return ret;
-
-	ret = write_reg(sdi, 0x15, 0x00);
-	if (ret != SR_OK)
-		return ret;
-
-	ret = write_adc(sdi, 0x0f, 0x0100);
+	ret = write_adc(sdi, 0x56, 0x0002);
 	if (ret != SR_OK)
 		return ret;
 
