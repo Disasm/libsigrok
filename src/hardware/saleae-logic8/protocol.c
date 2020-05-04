@@ -458,19 +458,18 @@ static int authenticate(const struct sr_dev_inst *sdi)
 static int upload_bitstream_part(const struct sr_dev_inst *sdi,
 				 const uint8_t *data, uint16_t len)
 {
-	uint8_t req[4 + 1020];
+	uint8_t req[3 + 62];
 	int ret;
 
-	if (len < 1 || len > 1020 || !data)
+	if (len < 1 || len > 62 || !data)
 		return SR_ERR_ARG;
 
 	req[0] = 0x08;
 	req[1] = COMMAND_SEND_BITSTREAM;
 	req[2] = len;
-	req[3] = len >> 8;
-	memcpy(req + 4, data, len);
+	memcpy(req + 3, data, len);
 
-	ret = transact(sdi, req, 4 + len, NULL, 0);
+	ret = transact(sdi, req, 3 + len, NULL, 0);
 	if (ret != SR_OK)
 		return ret;
 
@@ -502,7 +501,7 @@ static int upload_bitstream(const struct sr_dev_inst *sdi,
 		return ret;
 
 	while (bs_offset < bs_size) {
-		bs_part_size = MIN(bs_size - bs_offset, 1020);
+		bs_part_size = MIN(bs_size - bs_offset, 62);
 		sr_spew("Uploading %zd bytes.", bs_part_size);
 		ret = upload_bitstream_part(sdi, bitstream + bs_offset, bs_part_size);
 		if (ret != SR_OK)
