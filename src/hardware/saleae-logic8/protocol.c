@@ -261,7 +261,7 @@ static int read_temperature(const struct sr_dev_inst *sdi, int8_t *temp)
 
 	ret = transact(sdi, req, sizeof(req), rsp, sizeof(rsp));
 	if (ret == SR_OK) {
-		*temp = rsp[1];
+		*temp = rsp[0];
 	} else {
 		*temp = 0;
 	}
