@@ -126,6 +126,8 @@ static int transact(const struct sr_dev_inst *sdi,
 
 	if (req[0] & 0x20) { /* Reseed. */
 		return SR_OK;
+	} else if (req[1] == COMMAND_INIT_BITSTREAM || (req[0] & 0x08) != 0) {
+		return SR_OK;
 	} else if (rsp_len == 0) {
 		rsp = rsp_dummy;
 		rsp_len = sizeof(rsp_dummy);
@@ -457,7 +459,6 @@ static int upload_bitstream_part(const struct sr_dev_inst *sdi,
 				 const uint8_t *data, uint16_t len)
 {
 	uint8_t req[4 + 1020];
-	uint8_t rsp[1];
 	int ret;
 
 	if (len < 1 || len > 1020 || !data)
@@ -469,13 +470,9 @@ static int upload_bitstream_part(const struct sr_dev_inst *sdi,
 	req[3] = len >> 8;
 	memcpy(req + 4, data, len);
 
-	ret = transact(sdi, req, 4 + len, rsp, sizeof(rsp));
+	ret = transact(sdi, req, 4 + len, NULL, 0);
 	if (ret != SR_OK)
 		return ret;
-	if (rsp[0] != 0x00) {
-		sr_dbg("Failed to do bitstream upload (0x%02x).", rsp[0]);
-		return SR_ERR;
-	}
 
 	return SR_OK;
 }
@@ -486,7 +483,6 @@ static int upload_bitstream(const struct sr_dev_inst *sdi,
 	struct drv_context *drvc = sdi->driver->context;
 	unsigned char *bitstream = NULL;
 	uint8_t req[2];
-	uint8_t rsp[1];
 	uint8_t reg_val;
 	int ret = SR_ERR;
 	size_t bs_size, bs_offset = 0, bs_part_size;
@@ -501,14 +497,9 @@ static int upload_bitstream(const struct sr_dev_inst *sdi,
 	req[0] = 0x00;
 	req[1] = COMMAND_INIT_BITSTREAM;
 
-	ret = transact(sdi, req, sizeof(req), rsp, sizeof(rsp));
+	ret = transact(sdi, req, sizeof(req), NULL, 0);
 	if (ret != SR_OK)
 		return ret;
-	if (rsp[0] != 0x00) {
-		sr_err("Failed to start bitstream upload (0x%02x).", rsp[0]);
-		ret = SR_ERR;
-		goto out;
-	}
 
 	while (bs_offset < bs_size) {
 		bs_part_size = MIN(bs_size - bs_offset, 1020);
