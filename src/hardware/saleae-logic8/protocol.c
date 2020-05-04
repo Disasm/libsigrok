@@ -116,7 +116,7 @@ static int transact(const struct sr_dev_inst *sdi,
 		return SR_ERR;
 	}
 
-	if (req[0] == 0x20) { /* Reseed. */
+	if (req[0] & 0x20) { /* Reseed. */
 		return SR_OK;
 	} else if (rsp_len == 0) {
 		rsp = rsp_dummy;
