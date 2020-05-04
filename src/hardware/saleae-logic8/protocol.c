@@ -70,6 +70,10 @@ static void encrypt(const struct sr_dev_inst *sdi, const uint8_t *in, uint8_t *o
 
 	for (i = 0; i < len; i++) {
 		value = in[i];
+
+		// Calculate "control byte"
+		if (i == 0) value = (value & 0x28) | (in[1] & 0xd7);
+
 		mask = lfsr >> (i % 4 * 8);
 		if (i == 0) mask = lfsr & 0xd7;
 		out[i] = value ^ mask;
