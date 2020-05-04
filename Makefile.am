@@ -525,6 +525,12 @@ src_libdrivers_la_SOURCES += \
 	src/hardware/rohde-schwarz-sme-0x/protocol.c \
 	src/hardware/rohde-schwarz-sme-0x/api.c
 endif
+if HW_SALEAE_LOGIC8
+src_libdrivers_la_SOURCES += \
+	src/hardware/saleae-logic8/protocol.h \
+	src/hardware/saleae-logic8/protocol.c \
+	src/hardware/saleae-logic8/api.c
+endif
 if HW_SALEAE_LOGIC16
 src_libdrivers_la_SOURCES += \
 	src/hardware/saleae-logic16/protocol.h \
