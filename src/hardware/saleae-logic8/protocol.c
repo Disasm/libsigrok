@@ -227,13 +227,13 @@ static int write_adc(const struct sr_dev_inst *sdi,
 }
 
 static int read_eeprom(const struct sr_dev_inst *sdi,
-		       uint16_t address, uint8_t *data, uint16_t len)
+		       uint8_t address, uint8_t *data, uint8_t len)
 {
-	uint8_t req[8] = {
+	uint8_t req[6] = {
 		0x00, COMMAND_READ_EEPROM,
 		0x33, 0x81, /* Unknown values */
-		address, address >> 8,
-		len, len >> 8
+		address,
+		len
 	};
 
 	return transact(sdi, req, sizeof(req), data, len);
