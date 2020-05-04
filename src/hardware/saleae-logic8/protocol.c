@@ -523,7 +523,7 @@ static int upload_bitstream(const struct sr_dev_inst *sdi,
 	if (ret != SR_OK)
 		goto out;
 	if (reg_val != 0xaa) {
-		sr_err("Failed FPGA register read-back (0x%02x != 0xaa).", rsp[0]);
+		sr_err("Failed FPGA register read-back (0x%02x != 0xaa).", reg_val);
 		ret = SR_ERR;
 		goto out;
 	}
