@@ -256,8 +256,16 @@ static int read_eeprom_magic(const struct sr_dev_inst *sdi,
 static int read_temperature(const struct sr_dev_inst *sdi, int8_t *temp)
 {
 	uint8_t req[2] = {0x00, COMMAND_READ_TEMP};
+	uint8_t rsp[2];
+	int ret;
 
-	return transact(sdi, req, sizeof(req), (uint8_t*)temp, 1);
+	ret = transact(sdi, req, sizeof(req), rsp, sizeof(rsp));
+	if (ret == SR_OK) {
+		*temp = rsp[1];
+	} else {
+		*temp = 0;
+	}
+	return ret;
 }
 
 static int read_i2c(const struct sr_dev_inst *sdi, uint8_t *data, uint8_t len)
