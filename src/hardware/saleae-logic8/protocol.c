@@ -128,6 +128,8 @@ static int transact(const struct sr_dev_inst *sdi,
 		return SR_OK;
 	} else if (req[1] == COMMAND_INIT_BITSTREAM || (req[0] & 0x08) != 0) {
 		return SR_OK;
+	} else if (req[1] == COMMAND_WRITE_REG) {
+		return SR_OK;
 	} else if (rsp_len == 0) {
 		rsp = rsp_dummy;
 		rsp_len = sizeof(rsp_dummy);
