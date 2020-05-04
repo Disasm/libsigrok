@@ -25,6 +25,9 @@
 #define LOGIC8_VID		0x21a9
 #define LOGIC8_PID		0x1004
 
+#define USB_CONFIGURATION	1
+#define FX2_FIRMWARE		"saleae-logic8-fx2.fw"
+
 #define BUF_COUNT 512
 #define BUF_SIZE (16 * 1024)
 #define BUF_TIMEOUT 1000
@@ -55,78 +58,6 @@ static const uint64_t samplerates[] = {
 	SR_MHZ(25),
 	SR_MHZ(50),
 };
-
-#define FW_HEADER_SIZE 7
-#define FW_MAX_PART_SIZE (4 * 1024)
-
-static int upload_firmware(struct sr_context *ctx, libusb_device *dev, const char *name)
-{
-	struct libusb_device_handle *hdl = NULL;
-	unsigned char *firmware = NULL;
-	int ret = SR_ERR;
-	size_t fw_size, fw_offset = 0;
-	uint32_t part_address = 0;
-	uint16_t part_size = 0;
-	uint8_t part_final = 0;
-
-	firmware = sr_resource_load(ctx, SR_RESOURCE_FIRMWARE,
-				    name, &fw_size, 256 * 1024);
-	if (!firmware)
-		goto out;
-
-	sr_info("Uploading firmware '%s'.", name);
-
-	if (libusb_open(dev, &hdl) != 0)
-		goto out;
-
-	while ((fw_offset + FW_HEADER_SIZE) <= fw_size) {
-		part_size = GUINT16_FROM_LE(*(uint16_t*)(firmware + fw_offset));
-		part_address = GUINT32_FROM_LE(*(uint32_t*)(firmware + fw_offset + 2));
-		part_final = *(uint8_t*)(firmware + fw_offset + 6);
-		if (part_size > FW_MAX_PART_SIZE) {
-			sr_err("Part too large (%d).", part_size);
-			goto out;
-		}
-		fw_offset += FW_HEADER_SIZE;
-		if ((fw_offset + part_size) > fw_size) {
-			sr_err("Truncated firmware file.");
-			goto out;
-		}
-		ret = libusb_control_transfer(hdl, LIBUSB_REQUEST_TYPE_VENDOR |
-					      LIBUSB_ENDPOINT_OUT, 0xa0,
-					      part_address & 0xffff, part_address >> 16,
-					      firmware + fw_offset, part_size,
-					      100);
-		if (ret < 0) {
-			sr_err("Unable to send firmware to device: %s.",
-			       libusb_error_name(ret));
-			ret = SR_ERR;
-			goto out;
-		}
-		if (part_size)
-			sr_spew("Uploaded %d bytes.", part_size);
-		else
-			sr_info("Started firmware at 0x%x.", part_address);
-		fw_offset += part_size;
-	}
-
-	if ((!part_final) || (part_size != 0)) {
-		sr_err("Missing final part.");
-		goto out;
-	}
-
-	ret = SR_OK;
-
-	sr_info("Firmware upload done.");
-
- out:
-	if (hdl)
-		libusb_close(hdl);
-
-	g_free(firmware);
-
-	return ret;
-}
 
 static gboolean scan_firmware(libusb_device *dev)
 {
@@ -200,14 +131,11 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
             continue;
 
 		if (!scan_firmware(devlist[i])) {
-			const char *fwname;
 			sr_info("Found a Logic8 device (no firmware loaded).");
-			fwname = "saleae-logic8-fx2.fw";
-			if (upload_firmware(drvc->sr_ctx, devlist[i],
-					    fwname) != SR_OK) {
-				sr_err("Firmware upload failed, name %s.", fwname);
-				continue;
-			};
+			if (ezusb_upload_firmware(drvc->sr_ctx, devlist[i],
+                    USB_CONFIGURATION, FX2_FIRMWARE) != SR_OK) {
+                sr_err("Firmware upload failed, name %s.", FX2_FIRMWARE);
+            }
 			fw_loaded = TRUE;
 		}
 
