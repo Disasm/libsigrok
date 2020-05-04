@@ -22,6 +22,9 @@
 #include <string.h>
 #include "protocol.h"
 
+#define LOGIC8_VID		0x21a9
+#define LOGIC8_PID		0x1004
+
 #define BUF_COUNT 512
 #define BUF_SIZE (16 * 1024)
 #define BUF_TIMEOUT 1000
@@ -193,8 +196,8 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 	for (unsigned int i = 0; devlist[i]; i++) {
 		libusb_get_device_descriptor(devlist[i], &des);
 
-		if (des.idVendor != 0x21a9 || des.idProduct != 0x1004)
-			continue;
+		if (des.idVendor != LOGIC8_VID || des.idProduct != LOGIC8_PID)
+            continue;
 
 		if (!scan_firmware(devlist[i])) {
 			const char *fwname;
@@ -236,7 +239,7 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 
 		libusb_get_device_descriptor(devlist[i], &des);
 
-		if (des.idVendor != 0x21a9 || des.idProduct != 0x1004)
+		if (des.idVendor != LOGIC8_VID || des.idProduct != LOGIC8_PID)
 			continue;
 
 		if (usb_get_port_path(devlist[i], connection_id, sizeof(connection_id)) < 0)
