@@ -250,21 +250,6 @@ static int read_temperature(const struct sr_dev_inst *sdi, int8_t *temp)
 	return transact(sdi, req, sizeof(req), (uint8_t*)temp, 1);
 }
 
-static int get_firmware_version(const struct sr_dev_inst *sdi)
-{
-	uint8_t req[2] = {0x00, COMMAND_READ_FW_VER};
-	uint8_t rsp[128] = {};
-	int ret;
-
-	ret = transact(sdi, req, sizeof(req), rsp, sizeof(rsp));
-	if (ret == SR_OK) {
-		rsp[63] = 0;
-		sr_dbg("fw-version: %s", rsp);
-	}
-
-	return ret;
-}
-
 static int read_i2c(const struct sr_dev_inst *sdi, uint8_t *data, uint8_t len)
 {
 	uint8_t req[5];
@@ -599,10 +584,6 @@ SR_PRIV int saleae_logic8_init(const struct sr_dev_inst *sdi)
 	int ret, i;
 
 	ret = reseed(sdi);
-	if (ret != SR_OK)
-		return ret;
-
-	ret = get_firmware_version(sdi);
 	if (ret != SR_OK)
 		return ret;
 
