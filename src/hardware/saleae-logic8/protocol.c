@@ -150,8 +150,10 @@ static int reseed(const struct sr_dev_inst *sdi)
 	struct dev_context *devc = sdi->priv;
 	uint8_t req[] = {0x20, 0x24, 0x4b, 0x35, 0x8e};
 
-	devc->lfsr = 0;
-	return transact(sdi, req, sizeof(req), NULL, 0);
+	devc->lfsr = 0x354B248E;
+	int rc = transact(sdi, req, sizeof(req), NULL, 0);
+	devc->lfsr = 0x8E354B24;
+	return rc;
 }
 
 static int write_regs(const struct sr_dev_inst *sdi, uint8_t (*regs)[2], uint8_t cnt)
