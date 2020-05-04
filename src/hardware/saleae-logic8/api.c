@@ -42,7 +42,6 @@ static const uint32_t devopts[] = {
 
 static const char *channel_names[] = {
 	"0", "1", "2", "3", "4", "5", "6", "7",
-	"8", "9", "10", "11", "12", "13", "14", "15",
 };
 
 static const uint64_t samplerates[] = {
@@ -144,13 +143,13 @@ static gboolean scan_firmware(libusb_device *dev)
 	if (libusb_get_string_descriptor_ascii(hdl,
 		des.iManufacturer, strdesc, sizeof(strdesc)) < 0)
 		goto out;
-	if (strcmp((const char *)strdesc, "Saleae"))
+	if (strcmp((const char *)strdesc, "Saleae LLC"))
 		goto out;
 
 	if (libusb_get_string_descriptor_ascii(hdl,
 		des.iProduct, strdesc, sizeof(strdesc)) < 0)
 		goto out;
-	if (strcmp((const char *)strdesc, "Logic Pro"))
+	if (strcmp((const char *)strdesc, "Logic S/16"))
 		goto out;
 
 	ret = TRUE;
@@ -194,13 +193,13 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 	for (unsigned int i = 0; devlist[i]; i++) {
 		libusb_get_device_descriptor(devlist[i], &des);
 
-		if (des.idVendor != 0x21a9 || des.idProduct != 0x1006)
+		if (des.idVendor != 0x21a9 || des.idProduct != 0x1004)
 			continue;
 
 		if (!scan_firmware(devlist[i])) {
 			const char *fwname;
-			sr_info("Found a Logic Pro 16 device (no firmware loaded).");
-			fwname = "saleae-logicpro16-fx3.fw";
+			sr_info("Found a Logic8 device (no firmware loaded).");
+			fwname = "saleae-logic8-fx2.fw";
 			if (upload_firmware(drvc->sr_ctx, devlist[i],
 					    fwname) != SR_OK) {
 				sr_err("Firmware upload failed, name %s.", fwname);
@@ -237,7 +236,7 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 
 		libusb_get_device_descriptor(devlist[i], &des);
 
-		if (des.idVendor != 0x21a9 || des.idProduct != 0x1006)
+		if (des.idVendor != 0x21a9 || des.idProduct != 0x1004)
 			continue;
 
 		if (usb_get_port_path(devlist[i], connection_id, sizeof(connection_id)) < 0)
@@ -246,14 +245,14 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 		sdi = g_malloc0(sizeof(struct sr_dev_inst));
 		sdi->status = SR_ST_INITIALIZING;
 		sdi->vendor = g_strdup("Saleae");
-		sdi->model = g_strdup("Logic Pro 16");
+		sdi->model = g_strdup("Logic8");
 		sdi->connection_id = g_strdup(connection_id);
 
 		for (unsigned int j = 0; j < ARRAY_SIZE(channel_names); j++)
 			sr_channel_new(sdi, j, SR_CHANNEL_LOGIC, TRUE,
 				       channel_names[j]);
 
-		sr_dbg("Found a Logic Pro 16 device.");
+		sr_dbg("Found a Logic8 device.");
 		sdi->status = SR_ST_INACTIVE;
 		sdi->inst_type = SR_INST_USB;
 		sdi->conn = sr_usb_dev_inst_new(libusb_get_bus_number(devlist[i]),
@@ -290,7 +289,7 @@ static int dev_open(struct sr_dev_inst *sdi)
 	if (devc->dig_samplerate == 0)
 		devc->dig_samplerate = samplerates[3];
 
-	return saleae_logic_pro_init(sdi);
+	return saleae_logic8_init(sdi);
 }
 
 static int dev_close(struct sr_dev_inst *sdi)
@@ -402,7 +401,7 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
 	uint8_t *buf;
 	unsigned int i, ret;
 
-	ret = saleae_logic_pro_prepare(sdi);
+	ret = saleae_logic8_prepare(sdi);
 	if (ret != SR_OK)
 		return ret;
 
@@ -417,7 +416,7 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
 		transfer = libusb_alloc_transfer(0);
 		libusb_fill_bulk_transfer(transfer, usb->devhdl,
 			2 | LIBUSB_ENDPOINT_IN, buf, BUF_SIZE,
-			saleae_logic_pro_receive_data, (void *)sdi, 0);
+			saleae_logic8_receive_data, (void *)sdi, 0);
 		if ((ret = libusb_submit_transfer(transfer)) != 0) {
 			sr_err("Failed to submit transfer: %s.",
 			       libusb_error_name(ret));
@@ -434,7 +433,7 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
 
 	std_session_send_df_header(sdi);
 
-	saleae_logic_pro_start(sdi);
+	saleae_logic8_start(sdi);
 	if (ret != SR_OK)
 		return ret;
 
@@ -446,7 +445,7 @@ static int dev_acquisition_stop(struct sr_dev_inst *sdi)
 	struct dev_context *devc = sdi->priv;
 	struct drv_context *drvc = sdi->driver->context;
 
-	saleae_logic_pro_stop(sdi);
+	saleae_logic8_stop(sdi);
 
 	std_session_send_df_end(sdi);
 
@@ -457,9 +456,9 @@ static int dev_acquisition_stop(struct sr_dev_inst *sdi)
 	return SR_OK;
 }
 
-static struct sr_dev_driver saleae_logic_pro_driver_info = {
-	.name = "saleae-logic-pro",
-	.longname = "Saleae Logic Pro",
+static struct sr_dev_driver saleae_logic8_driver_info = {
+	.name = "saleae-logic8",
+	.longname = "Saleae Logic8",
 	.api_version = 1,
 	.init = std_init,
 	.cleanup = std_cleanup,
@@ -475,4 +474,4 @@ static struct sr_dev_driver saleae_logic_pro_driver_info = {
 	.dev_acquisition_stop = dev_acquisition_stop,
 	.context = NULL,
 };
-SR_REGISTER_DEV_DRIVER(saleae_logic_pro_driver_info);
+SR_REGISTER_DEV_DRIVER(saleae_logic8_driver_info);

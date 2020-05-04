@@ -17,15 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBSIGROK_HARDWARE_SALEAE_LOGIC_PRO_PROTOCOL_H
-#define LIBSIGROK_HARDWARE_SALEAE_LOGIC_PRO_PROTOCOL_H
+#ifndef LIBSIGROK_HARDWARE_SALEAE_LOGIC8_PROTOCOL_H
+#define LIBSIGROK_HARDWARE_SALEAE_LOGIC8_PROTOCOL_H
 
 #include <stdint.h>
 #include <glib.h>
 #include <libsigrok/libsigrok.h>
 #include "libsigrok-internal.h"
 
-#define LOG_PREFIX "saleae-logic-pro"
+#define LOG_PREFIX "saleae-logic8"
 
 /* 16 channels * 32 samples */
 #define CONV_BATCH_SIZE (2 * 32)
@@ -53,10 +53,10 @@ struct dev_context {
 	unsigned int batch_index;
 };
 
-SR_PRIV int saleae_logic_pro_init(const struct sr_dev_inst *sdi);
-SR_PRIV int saleae_logic_pro_prepare(const struct sr_dev_inst *sdi);
-SR_PRIV int saleae_logic_pro_start(const struct sr_dev_inst *sdi);
-SR_PRIV int saleae_logic_pro_stop(const struct sr_dev_inst *sdi);
-SR_PRIV void LIBUSB_CALL saleae_logic_pro_receive_data(struct libusb_transfer *transfer);
+SR_PRIV int saleae_logic8_init(const struct sr_dev_inst *sdi);
+SR_PRIV int saleae_logic8_prepare(const struct sr_dev_inst *sdi);
+SR_PRIV int saleae_logic8_start(const struct sr_dev_inst *sdi);
+SR_PRIV int saleae_logic8_stop(const struct sr_dev_inst *sdi);
+SR_PRIV void LIBUSB_CALL saleae_logic8_receive_data(struct libusb_transfer *transfer);
 
 #endif

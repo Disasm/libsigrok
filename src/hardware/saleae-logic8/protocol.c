@@ -588,7 +588,7 @@ static int configure_channels(const struct sr_dev_inst *sdi)
 	return SR_OK;
 }
 
-SR_PRIV int saleae_logic_pro_init(const struct sr_dev_inst *sdi)
+SR_PRIV int saleae_logic8_init(const struct sr_dev_inst *sdi)
 {
 	uint8_t reg_val;
 	uint8_t dummy[8];
@@ -617,7 +617,7 @@ SR_PRIV int saleae_logic_pro_init(const struct sr_dev_inst *sdi)
 	if (reg_val == 0xaa) {
 		sr_info("Skipping bitstream upload.");
 	} else {
-		ret = upload_bitstream(sdi, "saleae-logicpro16-fpga.bitstream");
+		ret = upload_bitstream(sdi, "saleae-logic8-fpga.bitstream");
 		if (ret != SR_OK)
 			return ret;
 	}
@@ -721,7 +721,7 @@ SR_PRIV int saleae_logic_pro_init(const struct sr_dev_inst *sdi)
 	return SR_OK;
 }
 
-SR_PRIV int saleae_logic_pro_prepare(const struct sr_dev_inst *sdi)
+SR_PRIV int saleae_logic8_prepare(const struct sr_dev_inst *sdi)
 {
 	struct dev_context *devc = sdi->priv;
 	uint8_t regs_unknown[][2] = {
@@ -791,7 +791,7 @@ SR_PRIV int saleae_logic_pro_prepare(const struct sr_dev_inst *sdi)
 	return SR_OK;
 }
 
-SR_PRIV int saleae_logic_pro_start(const struct sr_dev_inst *sdi)
+SR_PRIV int saleae_logic8_start(const struct sr_dev_inst *sdi)
 {
 	struct dev_context *devc = sdi->priv;
 
@@ -803,7 +803,7 @@ SR_PRIV int saleae_logic_pro_start(const struct sr_dev_inst *sdi)
 	return SR_OK;
 }
 
-SR_PRIV int saleae_logic_pro_stop(const struct sr_dev_inst *sdi)
+SR_PRIV int saleae_logic8_stop(const struct sr_dev_inst *sdi)
 {
 	uint8_t stop_req[] = {0x00, 0x02};
 	uint8_t stop_rsp[2] = {};
@@ -824,7 +824,7 @@ SR_PRIV int saleae_logic_pro_stop(const struct sr_dev_inst *sdi)
 	return SR_OK;
 }
 
-static void saleae_logic_pro_send_data(const struct sr_dev_inst *sdi,
+static void saleae_logic8_send_data(const struct sr_dev_inst *sdi,
 				      void *data, size_t length, size_t unitsize)
 {
 	const struct sr_datafeed_logic logic = {
@@ -845,7 +845,7 @@ static void saleae_logic_pro_send_data(const struct sr_dev_inst *sdi,
  * One batch from the device consists of 32 samples per active digital channel.
  * This stream of batches is packed into USB packets with 16384 bytes each.
  */
-static void saleae_logic_pro_convert_data(const struct sr_dev_inst *sdi,
+static void saleae_logic8_convert_data(const struct sr_dev_inst *sdi,
 					 const uint32_t *src, size_t srccnt)
 {
 	struct dev_context *devc = sdi->priv;
@@ -885,7 +885,7 @@ static void saleae_logic_pro_convert_data(const struct sr_dev_inst *sdi,
 	devc->batch_index = batch_index;
 }
 
-SR_PRIV void LIBUSB_CALL saleae_logic_pro_receive_data(struct libusb_transfer *transfer)
+SR_PRIV void LIBUSB_CALL saleae_logic8_receive_data(struct libusb_transfer *transfer)
 {
 	const struct sr_dev_inst *sdi = transfer->user_data;
 	struct dev_context *devc = sdi->priv;
@@ -903,8 +903,8 @@ SR_PRIV void LIBUSB_CALL saleae_logic_pro_receive_data(struct libusb_transfer *t
 		return;
 	}
 
-	saleae_logic_pro_convert_data(sdi, (uint32_t*)transfer->buffer, 16 * 1024 / 4);
-	saleae_logic_pro_send_data(sdi, devc->conv_buffer, devc->conv_size, 2);
+	saleae_logic8_convert_data(sdi, (uint32_t*)transfer->buffer, 16 * 1024 / 4);
+	saleae_logic8_send_data(sdi, devc->conv_buffer, devc->conv_size, 2);
 
 	if ((ret = libusb_submit_transfer(transfer)) != LIBUSB_SUCCESS)
 		sr_dbg("FIXME resubmit failed");
