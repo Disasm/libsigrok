@@ -131,6 +131,8 @@ static int transact(const struct sr_dev_inst *sdi,
 		return SR_OK;
 	} else if (req[1] == COMMAND_WRITE_REG) {
 		return SR_OK;
+	} else if (req[1] == COMMAND_WAKE_I2C || req[1] == COMMAND_WRITE_I2C) {
+		return SR_OK;
 	} else if (req[1] == COMMAND_SET_LED) {
 		return SR_OK;
 	} else if (rsp_len == 0) {
@@ -274,7 +276,6 @@ static int read_temperature(const struct sr_dev_inst *sdi, int8_t *temp)
 static int read_i2c(const struct sr_dev_inst *sdi, uint8_t *data, uint8_t len)
 {
 	uint8_t req[5];
-	uint8_t rsp[1 + 128];
 	int ret;
 
 	if (len < 1 || len > 128 || !data)
@@ -284,24 +285,22 @@ static int read_i2c(const struct sr_dev_inst *sdi, uint8_t *data, uint8_t len)
 	req[1] = COMMAND_READ_I2C;
 	req[2] = 0xc0; /* Fixed address */
 	req[3] = len;
-	req[4] = 0; /* Len MSB? */
+	req[4] = 0x03; /* This is the only chunk in request */
 
-	ret = transact(sdi, req, sizeof(req), rsp, 1 + len);
+	ret = transact(sdi, req, sizeof(req), data, len);
 	if (ret != SR_OK)
 		return ret;
-	if (rsp[0] != 0x02) {
-		sr_dbg("Failed to do I2C read (0x%02x).", rsp[0]);
+	if (data[0] != len) {
+		sr_dbg("Failed to do I2C read (0x%02x).", data[0]);
 		return SR_ERR;
 	}
 
-	memcpy(data, rsp + 1, len);
 	return SR_OK;
 }
 
 static int write_i2c(const struct sr_dev_inst *sdi, const uint8_t *data, uint8_t len)
 {
 	uint8_t req[5 + 128];
-	uint8_t rsp[1];
 	int ret;
 
 	if (len < 1 || len > 128 || !data)
@@ -311,16 +310,12 @@ static int write_i2c(const struct sr_dev_inst *sdi, const uint8_t *data, uint8_t
 	req[1] = COMMAND_WRITE_I2C;
 	req[2] = 0xc0; /* Fixed address */
 	req[3] = len;
-	req[4] = 0; /* Len MSB? */
+	req[4] = 0x03; /* This is the only chunk in request */
 	memcpy(req + 5, data, len);
 
-	ret = transact(sdi, req, 5 + len, rsp, sizeof(rsp));
+	ret = transact(sdi, req, 5 + len, NULL, 0);
 	if (ret != SR_OK)
 		return ret;
-	if (rsp[0] != 0x02) {
-		sr_dbg("Failed to do I2C write (0x%02x).", rsp[0]);
-		return SR_ERR;
-	}
 
 	return SR_OK;
 }
