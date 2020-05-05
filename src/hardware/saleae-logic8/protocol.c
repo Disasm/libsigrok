@@ -24,6 +24,7 @@
 #define COMMAND_START_CAPTURE	0x01
 #define COMMAND_STOP_CAPTURE	0x02
 #define COMMAND_READ_EEPROM	0x07
+#define COMMAND_SET_LED  0x7b
 #define COMMAND_INIT_BITSTREAM  0x7e
 #define COMMAND_SEND_BITSTREAM  0x7f
 #define COMMAND_WRITE_REG	0x80
@@ -129,6 +130,8 @@ static int transact(const struct sr_dev_inst *sdi,
 	} else if (req[1] == COMMAND_INIT_BITSTREAM || (req[0] & 0x08) != 0) {
 		return SR_OK;
 	} else if (req[1] == COMMAND_WRITE_REG) {
+		return SR_OK;
+	} else if (req[1] == COMMAND_SET_LED) {
 		return SR_OK;
 	} else if (rsp_len == 0) {
 		rsp = rsp_dummy;
@@ -540,20 +543,18 @@ static int upload_bitstream(const struct sr_dev_inst *sdi,
 	return ret;
 }
 
-#if 0
 static int set_led(const struct sr_dev_inst *sdi, uint8_t r, uint8_t g, uint8_t b)
 {
-	uint8_t regs[][2] = {
-		{REG_LED_RED, r},
-		{REG_LED_GREEN, g},
-		{REG_LED_BLUE, b},
-	};
-
 	authenticate(sdi);
 
-	return write_regs(sdi, ARRAY_AND_SIZE(regs));
+	uint8_t req[10] = {
+		0x00, COMMAND_SET_LED,
+		0x01, 0xb8, 0xc2, 0x00, 0xff, /* Unknown values */
+		r, g, b
+	};
+
+	return transact(sdi, req, sizeof(req), NULL, 0);
 }
-#endif
 
 static int configure_channels(const struct sr_dev_inst *sdi)
 {
@@ -695,8 +696,7 @@ SR_PRIV int saleae_logic8_init(const struct sr_dev_inst *sdi)
 			return ret;
 	}
 
-	/* Setting the LED doesn't work yet. */
-	/* set_led(sdi, 0x00, 0x00, 0xff); */
+	set_led(sdi, 0x00, 0x00, 0xff);
 
 	return SR_OK;
 }
