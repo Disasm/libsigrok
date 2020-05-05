@@ -417,6 +417,13 @@ static int crypto_sign(const struct sr_dev_inst *sdi, uint8_t *data, uint8_t *cr
 	return SR_OK;
 }
 
+static int crypto_sleep(const struct sr_dev_inst *sdi)
+{
+	uint8_t i2c_req[1] = {0x01};
+
+	return write_i2c(sdi, i2c_req, sizeof(i2c_req));
+}
+
 static int authenticate(const struct sr_dev_inst *sdi)
 {
 	struct dev_context *devc = sdi->priv;
@@ -459,6 +466,10 @@ static int authenticate(const struct sr_dev_inst *sdi)
 
 	sr_dbg("Authenticate 0x%08x -> 0x%08x", devc->lfsr, lfsr);
 	devc->lfsr = lfsr;
+
+	ret = crypto_sleep(sdi);
+	if (ret != SR_OK)
+		return ret;
 
 	return SR_OK;
 }
